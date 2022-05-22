@@ -55,29 +55,6 @@ void dac_initialize()
     CLEARBIT(DAC_SDI_PORT);
     CLEARBIT(DAC_LDAC_PORT);    // set default state: CS=1, SCK=0, SDI=undefined, LDAC=1 (Datasheet MCP4822 Page 23)
 
-    
-    // starting conversation
-    
-    CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
-    
-    uint8_t i =0;
-     
-    for(i; i<16; i++){          // Set Binary for Output signal
-        CLEARBIT(DAC_SCK_PORT);
-        
-        Nop();
-        SETBIT(DAC_SCK_PORT);
-    }
-    
-    CLEARBIT(DAC_CS_PORT); // Clear CS bit
-    CLEARBIT(DAC_SDI_PORT); // Clear SDI bit
-    Nop();
-    
-    SETBIT(DAC_LDAC_PORT);
-    Nop();
-    Nop();
-    CLEARBIT(DAC_LDAC_PORT);
-    
 }
 
 /*
@@ -103,9 +80,71 @@ void timer_initialize()
     __builtin_write_OSCCONL(OSCCONL | 2);
     // configure timer
     
+    //Timer 1 -- 0.5 secound
+    
+    T1CONbits.TON = 0; // Disable the Timers
+    T1CONbits.TCKPS = 0b11; // Set Prescaler 256
+    T1CONbits.TCS = 1; // Set Clock Source (external = 1)
+    T1CONbits.TGATE = 0; // Set Gated Timer Mode -> don't use gating //this line can be ignored, if TCS =  1 (have a look at the manual)  
+    T1CONbits.TSYNC = 0; // T1: Set External Clock Input Synchronization -> no sync
+    PR1 = 64; // Load Timer Periods (???)
+    TMR1 = 0x00; // Reset Timer Values
+    IPC0bits.T1IP = 0x01; // Set Interrupt Priority (actually Level 1)
+    IFS0bits.T1IF = 0; // Clear Interrupt Flags
+    IEC0bits.T1IE = 1; // Enable Interrupts
+    T1CONbits.TON = 1; // Enable the Timers
+    
+    //Timer 2 -- 2 secound
+    
+    T2CONbits.TON = 0; // Disable the Timers
+    T2CONbits.TCKPS = 0b11; // Set Prescaler 256
+    T2CONbits.TCS = 1; // Set Clock Source (internal = 0)
+    T2CONbits.TGATE = 0; // Set Gated Timer Mode -> don't use gating  
+    PR2 = 256; // Load Timer Periods (???)
+    TMR2 = 0x00; // Reset Timer Values
+    IPC1bits.T2IP = 0x01; // Set Interrupt Priority (actually Level 1)
+    IFS0bits.T2IF = 0; // Clear Interrupt Flags
+    IEC0bits.T2IE = 1; // Enable Interrupts
+    T2CONbits.TON = 1; // Enable the Timers
+    
+    // Timer 3 -- 1 secound
+    
+    T3CONbits.TON = 0; // Disable the Timers
+    T3CONbits.TCKPS = 0b00; // Set Prescaler 1:1
+    T3CONbits.TCS = 1; // Set Clock Source (external = 1)
+    T3CONbits.TGATE = 0; // Set Gated Timer Mode -> don't use gating //this line can be ignored, if TCS =  1 (have a look at the manual)  
+    PR3 = 128; // Load Timer Periods (highets value possible?)
+    TMR3 = 0x00; // Reset Timer Values
+    IPC2bits.T3IP = 0x01; // Set Interrupt Priority (actually Level 1)
+    CLEARBIT(IFS0bits.T3IF); //= 0; // Clear Interrupt Flags
+    IEC0bits.T3IE = 1; // Enable Interrupts --> (important: all)
+    T3CONbits.TON = 1; // Enable the Timers
+    
 }
 
-// interrupt service routine?
+
+// interrupt service routine
+
+void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T1Interrupt(void)
+{ 
+    TOGGLELED(LED1_PORT);
+    
+    IFS0bits.T1IF = 0;  
+}
+
+void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T2Interrupt(void)
+{ 
+    TOGGLELED(LED1_PORT);
+    
+    IFS0bits.T2IF = 0;  
+}
+
+void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T3Interrupt(void)
+{ 
+    TOGGLELED(LED1_PORT);
+    
+    IFS0bits.T3IF = 0;  
+}
 
 /*
  * main loop
@@ -113,13 +152,43 @@ void timer_initialize()
 
 void main_loop()
 {
+    oneVolatge = 1000;
+    twoPointfiveVolatage = 2500;
+    threePointfiveVolateg = 3000;
+    
     // print assignment information
     lcd_printf("Lab03: DAC");
     lcd_locate(0, 1);
-    lcd_printf("Group: GroupName");
+    lcd_printf("Group: Boyang & Ron");
+    
+    CLEARBIT(LED1_TRIS);   //set LED1 as output
     
     while(TRUE)
-    {
-        // main loop code
+    {  // main loop code
+        
+        CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
+    
+        uint8_t i =15;
+        
+        oneVoltage = ~BV(15) | ~BV(13) | BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+     
+        for(i; i>-1; i--){          // Set Binary for Output signal
+            CLEARBIT(DAC_SCK_PORT);
+        
+            DAC_SDI_PORT |= oneVolatge & BV(i);
+            
+            Nop();
+            SETBIT(DAC_SCK_PORT);
+        }
+    
+        CLEARBIT(DAC_CS_PORT); // Clear CS bit
+        CLEARBIT(DAC_SDI_PORT); // Clear SDI bit
+        Nop();
+    
+        SETBIT(DAC_LDAC_PORT);
+        Nop();
+        Nop();
+        CLEARBIT(DAC_LDAC_PORT);
+    
     }
 }
