@@ -126,7 +126,6 @@ void setDAC (uint16_t value){
     SETBIT(DAC_CS_PORT); // CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
     
     uint8_t i =15;
-    uint16_t store;
         
     for(i; i>=0; i--){          // Set Binary for Output signal
             
@@ -156,13 +155,14 @@ void setDAC (uint16_t value){
 void main_loop()
 {
     uint16_t oneVoltage = 1000; 
-    oneVoltage = ~BV(15) | ~BV(13) | BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+   
+    oneVoltage |=  BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
     uint16_t twoPointFiveVoltage = 2500;
-    twoPointFiveVoltage = ~BV(15) | ~BV(13) | BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+    twoPointFiveVoltage |= BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
     uint16_t threePointFiveVoltage = 3000;
-    threePointFiveVoltage = ~BV(15) | ~BV(13) | BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+    threePointFiveVoltage |=  BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
     
     // print assignment information
@@ -171,7 +171,7 @@ void main_loop()
     lcd_printf("Group: Boyang & Ron");
     
     CLEARBIT(LED1_TRIS);   //set LED1 as output
-    
+     
     setDAC(oneVoltage); // set initial 1 voltage
     
     while(TRUE)
@@ -179,7 +179,7 @@ void main_loop()
         
         setDAC(oneVoltage); // set initial 1 voltage
            
-       /* if(counterHalfSecound == 1){   //check whether 0.5 s have passed
+        if(counterHalfSecound == 1){   //check whether 0.5 s have passed
             setDAC(twoPointFiveVoltage); // set Vout to 2.5V  
         }  
         
@@ -189,7 +189,7 @@ void main_loop()
         
         if(counterHalfSecound == 7){   //check whether 3.5 s have passed
            setDAC(oneVoltage); // set Vout to 1V
-        }*/
+        }
     
     }
 }
