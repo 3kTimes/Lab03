@@ -152,9 +152,6 @@ void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T3Interrupt(void)
 
 void main_loop()
 {
-    oneVolatge = 1000;
-    twoPointfiveVolatage = 2500;
-    threePointfiveVolateg = 3000;
     
     // print assignment information
     lcd_printf("Lab03: DAC");
@@ -166,11 +163,15 @@ void main_loop()
     while(TRUE)
     {  // main loop code
         
+        uint16_t oneVolatge = 1000;
+        uint16_t twoPointFiveVolatage = 2500;
+        uint16_t threePointFiveVolateg = 3000;
+        
         CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
     
         uint8_t i =15;
         
-        oneVoltage = ~BV(15) | ~BV(13) | BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+        oneVolatge = ~BV(15) | ~BV(13) | BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
      
         for(i; i>-1; i--){          // Set Binary for Output signal
             CLEARBIT(DAC_SCK_PORT);
