@@ -52,10 +52,10 @@ void dac_initialize()
     CLEARBIT(DAC_SCK_TRIS); 
     CLEARBIT(DAC_LDAC_TRIS);    // set RD8, RB10, RB11, RB13 as output pins
     
-    CLEARBIT(DAC_CS_PORT); // SETBIT(DAC_CS_PORT); 
-    CLEARBIT(DAC_SCK_PORT);
-    CLEARBIT(DAC_SDI_PORT);
-    CLEARBIT(DAC_LDAC_PORT);  // SETBIT(DAC_LDAC_PORT);  // set default state: CS=1, SCK=0, SDI=undefined, LDAC=1 (Datasheet MCP4822 Page 23)
+    SETBIT(DAC_CS_PORT); // Low to enable 
+    CLEARBIT(DAC_SCK_PORT); // wirte on rising edge
+    CLEARBIT(DAC_SDI_PORT); // Bit to send Data to DAC
+    SETBIT(DAC_LDAC_PORT);  // set default state: CS=1, SCK=0, SDI=undefined, LDAC=1 (Datasheet MCP4822 Page 23)
 
 }
 
@@ -123,13 +123,14 @@ void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T1Interrupt(void)
 
 void setDAC (uint16_t value){
   
-    SETBIT(DAC_CS_PORT); // CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
+    CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
     
     uint8_t i =15;
         
     for(i; i>=0; i--){          // Set Binary for Output signal
             
         CLEARBIT(DAC_SCK_PORT);
+        Nop();
         
         DAC_SDI_PORT = value>>i & BV(0);
             
@@ -137,14 +138,14 @@ void setDAC (uint16_t value){
         SETBIT(DAC_SCK_PORT);
     }
     
-    CLEARBIT(DAC_CS_PORT); // SETBIT(DAC_CS_PORT);  // Clear CS bit
+    SETBIT(DAC_CS_PORT); // SETBIT(DAC_CS_PORT);  // Clear CS bit
     CLEARBIT(DAC_SDI_PORT); // Clear SDI bit
     Nop();
     
-    SETBIT(DAC_LDAC_PORT);
+    CLEARBIT(DAC_LDAC_PORT);
     Nop();
     Nop();
-    CLEARBIT(DAC_LDAC_PORT);   
+    SETBIT(DAC_LDAC_PORT);   
 }
 
 
@@ -193,3 +194,4 @@ void main_loop()
     
     }
 }
+
