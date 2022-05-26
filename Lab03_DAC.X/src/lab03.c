@@ -125,14 +125,14 @@ void setDAC (uint16_t value){
   
     CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
     
-    uint8_t i =15;
+    uint8_t i =16;
         
-    for(i; i>=0; i--){          // Set Binary for Output signal
+    for(i; i>=1; i--){          // Set Binary for Output signal
             
         CLEARBIT(DAC_SCK_PORT);
         Nop();
         
-        DAC_SDI_PORT = value>>i & BV(0);
+        DAC_SDI_PORT = value>>(i-1) & BV(0);
             
         Nop();
         SETBIT(DAC_SCK_PORT);
