@@ -127,8 +127,9 @@ void setDAC (uint16_t value){
     
     uint8_t i =16;
         
-    for(i; i>=1; i--){          // Set Binary for Output signal
+    for(i; i>=1; i--){          // Set Binary-Code for Output signal by setting SDI Bit high or low
             
+        Nop();
         CLEARBIT(DAC_SCK_PORT);
         Nop();
         
