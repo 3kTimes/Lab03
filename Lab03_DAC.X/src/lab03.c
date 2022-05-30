@@ -31,7 +31,7 @@
 #define DAC_SCK_AD2CFG AD2PCFGLbits.PCFG11
 #define DAC_LDAC_AD2CFG AD2PCFGLbits.PCFG13
 
-volatile uint8_t counterHalfSecound = 0;
+volatile uint8_t counterHalfSecound = 0;  //declear a VAR for Interrupts
 
 void dac_initialize()
 {
@@ -52,10 +52,10 @@ void dac_initialize()
     CLEARBIT(DAC_SCK_TRIS); 
     CLEARBIT(DAC_LDAC_TRIS);    // set RD8, RB10, RB11, RB13 as output pins
     
-    SETBIT(DAC_CS_PORT); // Low to enable 
-    CLEARBIT(DAC_SCK_PORT); // wirte on rising edge
-    CLEARBIT(DAC_SDI_PORT); // Bit to send Data to DAC
-    SETBIT(DAC_LDAC_PORT);  // set default state: CS=1, SCK=0, SDI=undefined, LDAC=1 (Datasheet MCP4822 Page 23)
+    SETBIT(DAC_CS_PORT); // SETBIT(DAC_CS_PORT); 
+    CLEARBIT(DAC_SCK_PORT);
+    CLEARBIT(DAC_SDI_PORT);
+    SETBIT(DAC_LDAC_PORT);  // SETBIT(DAC_LDAC_PORT);  // set default state: CS=1, SCK=0, SDI=undefined, LDAC=1 (Datasheet MCP4822 Page 23)
 
 }
 
@@ -102,7 +102,7 @@ void timer_initialize()
 
 void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T1Interrupt(void)
 {   
-    counterHalfSecound ++;
+    counterHalfSecound++;
     
     if(counterHalfSecound == 1){   //check whether 0.5 s have passed
             TOGGLELED(LED1_PORT);  
@@ -114,12 +114,11 @@ void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T1Interrupt(void)
         
     if(counterHalfSecound == 7){   //check whether 3.5 s have passed
             TOGGLELED(LED1_PORT);
-            counterHalfSecound = 0;
+//            counterHalfSecound = 0;
         }
     
     IFS0bits.T1IF = 0;  
 }
-
 
 void setDAC (uint16_t value){
   
@@ -138,15 +137,21 @@ void setDAC (uint16_t value){
         Nop();
         SETBIT(DAC_SCK_PORT);
     }
+
+
+//    lcd_locate(0, 4);
+//    lcd_printf("%u",DAC_SDI_PORT);
     
-    SETBIT(DAC_CS_PORT); // SETBIT(DAC_CS_PORT);  // Clear CS bit
+    SETBIT(DAC_CS_PORT); 
+    //Nop();// SETBIT(DAC_CS_PORT);  // Clear CS bit
     CLEARBIT(DAC_SDI_PORT); // Clear SDI bit
     Nop();
     
     CLEARBIT(DAC_LDAC_PORT);
     Nop();
     Nop();
-    SETBIT(DAC_LDAC_PORT);   
+    SETBIT(DAC_LDAC_PORT);
+    //Nop();
 }
 
 
@@ -156,14 +161,17 @@ void setDAC (uint16_t value){
 
 void main_loop()
 {
+
+    
     uint16_t oneVoltage = 1000; 
-   
-    oneVoltage |=  BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+    oneVoltage |= BV(12);  // ->100111110100=5096 settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+    
+
     
     uint16_t twoPointFiveVoltage = 2500;
     twoPointFiveVoltage |= BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
-    uint16_t threePointFiveVoltage = 3000;
+    uint16_t threePointFiveVoltage = 3500;
     threePointFiveVoltage |=  BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
     
@@ -171,28 +179,29 @@ void main_loop()
     lcd_printf("Lab03: DAC");
     lcd_locate(0, 1);
     lcd_printf("Group: Boyang & Ron");
+
     
     CLEARBIT(LED1_TRIS);   //set LED1 as output
-     
+    
+    
     setDAC(oneVoltage); // set initial 1 voltage
     
     while(TRUE)
     {  // main loop code
         
-        setDAC(oneVoltage); // set initial 1 voltage
            
         if(counterHalfSecound == 1){   //check whether 0.5 s have passed
             setDAC(twoPointFiveVoltage); // set Vout to 2.5V  
         }  
-        
+//        
         if(counterHalfSecound == 5){   //check whether 2.5 s have passed
             setDAC(threePointFiveVoltage); // set Vout to 3.5V
         }
         
         if(counterHalfSecound == 7){   //check whether 3.5 s have passed
            setDAC(oneVoltage); // set Vout to 1V
+           counterHalfSecound = 0;
         }
-    
+
     }
 }
-
