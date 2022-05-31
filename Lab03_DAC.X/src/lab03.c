@@ -56,7 +56,6 @@ void dac_initialize()
     CLEARBIT(DAC_SCK_PORT);
     CLEARBIT(DAC_SDI_PORT);
     SETBIT(DAC_LDAC_PORT);  // SETBIT(DAC_LDAC_PORT);  // set default state: CS=1, SCK=0, SDI=undefined, LDAC=1 (Datasheet MCP4822 Page 23)
-
 }
 
 /*
@@ -120,7 +119,11 @@ void __attribute__((__interrupt__, __shadow__, __auto_psv__)) _T1Interrupt(void)
     IFS0bits.T1IF = 0;  
 }
 
-void setDAC (uint16_t value){
+/*
+ *  Function 
+ */
+
+void setDAC (uint16_t value){    // Function to set the DAC to claimed value
   
     CLEARBIT(DAC_CS_PORT);  // Set CS bit to zero to start conversation
     
@@ -161,18 +164,15 @@ void setDAC (uint16_t value){
 
 void main_loop()
 {
-
     
     uint16_t oneVoltage = 1000; 
-    oneVoltage |= BV(12);  // ->100111110100=5096 settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+    oneVoltage |=  BV(12);  // ->100111110100=5096 settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
-
-    
-    uint16_t twoPointFiveVoltage = 2500;
+    uint16_t twoPointFiveVoltage = 2500;   
     twoPointFiveVoltage |= BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
-    uint16_t threePointFiveVoltage = 3500;
-    threePointFiveVoltage |=  BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
+    uint16_t threePointFiveVoltage = 3500;  
+    threePointFiveVoltage |= BV(12);  // settings for DAC.... Bit 15 to 0 (write ti DACA); Bit 14 don't care; Bit 13 to 0 (4.096V); Bit 12 to 1
     
     
     // print assignment information
@@ -193,15 +193,16 @@ void main_loop()
         if(counterHalfSecound == 1){   //check whether 0.5 s have passed
             setDAC(twoPointFiveVoltage); // set Vout to 2.5V  
         }  
-//        
+       
         if(counterHalfSecound == 5){   //check whether 2.5 s have passed
             setDAC(threePointFiveVoltage); // set Vout to 3.5V
         }
         
         if(counterHalfSecound == 7){   //check whether 3.5 s have passed
            setDAC(oneVoltage); // set Vout to 1V
-           counterHalfSecound = 0;
+           counterHalfSecound = 0;  //reset counterHalfSecound
         }
 
     }
 }
+
